@@ -2,6 +2,8 @@
 
 > **Built on Avalanche** | **Cyberpunk Aesthetics** | **PvE & PvP Ready**
 
+[![Play Now](https://img.shields.io/badge/PLAY_NOW-MoltDuel_Live-E84142?style=for-the-badge&logo=avalanche&logoColor=white)](https://moltduel-avax.vercel.app/)
+
 ![MoltDuel Banner](logo.jpg)
 
 ## 📜 Overview
