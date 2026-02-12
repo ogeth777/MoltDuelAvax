@@ -16,7 +16,7 @@ const AvatarMesh: React.FC<{ mood: AIAvatarProps['mood'] }> = ({ mood }) => {
       case 'angry': return '#EF4444'; // Red (AI Lost/User Won)
       case 'happy': return '#10B981'; // Green (AI Won/User Lost)
       case 'thinking': return '#F59E0B'; // Orange (Processing)
-      case 'neutral': default: return '#836EF9'; // Monad Purple
+      case 'neutral': default: return '#836EF9'; // AVALANCHE Purple
     }
   };
 
