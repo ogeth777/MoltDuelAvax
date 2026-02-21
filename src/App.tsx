@@ -447,21 +447,7 @@ function App() {
 
         <div className="w-full max-w-2xl h-[200px] flex items-center justify-center relative mb-24">
           <div className="absolute inset-0 bg-avax-red/5 blur-[100px] rounded-full" />
-          {mode === 'pve' ? (
-            <AIAvatar mood={getMood()} />
-          ) : (
-            <div className="flex items-center gap-12">
-              <div className="text-center">
-                <div className="text-xs text-gray-400 mb-2">PLAYER 1</div>
-                <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/5">🧑</div>
-              </div>
-              <div className="text-2xl text-white/20">VS</div>
-              <div className="text-center">
-                <div className="text-xs text-gray-400 mb-2">PLAYER 2</div>
-                <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/5">🧑‍💻</div>
-              </div>
-            </div>
-          )}
+          <AIAvatar mood={getMood()} />
           <div className="absolute inset-0 border border-white/5 rounded-full animate-[spin_10s_linear_infinite]" />
           <div className="absolute inset-4 border border-dashed border-white/5 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
         </div>
@@ -479,10 +465,11 @@ function App() {
                   PvE
                 </button>
                 <button
-                  onClick={() => { playSound('click'); setMode('pvp'); resetGame(); }}
-                  className={`px-4 py-1.5 border font-orbitron text-xs tracking-widest rounded ${mode === 'pvp' ? 'border-avax-red/60 text-avax-red bg-white/10' : 'border-white/10 text-gray-500 hover:border-white/30'}`}
+                  disabled
+                  className="px-4 py-1.5 border font-orbitron text-xs tracking-widest rounded border-white/10 text-gray-600 cursor-not-allowed flex items-center gap-1"
                 >
-                  PvP
+                  <span>PvP</span>
+                  <span className="text-[10px] text-avax-red/70">SOON</span>
                 </button>
               </div>
               {mode === 'pve' && (
@@ -498,11 +485,6 @@ function App() {
                       </span>
                     </button>
                   ))}
-                </div>
-              )}
-              {mode === 'pvp' && (
-                <div className="text-xs text-gray-400 font-mono tracking-widest">
-                  {pvpStage === 'p1' ? 'Player 1: choose' : 'Player 2: choose'}
                 </div>
               )}
             </div>
