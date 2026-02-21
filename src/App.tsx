@@ -45,6 +45,7 @@ function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [mode, setMode] = useState<Mode>('pve');
@@ -401,6 +402,47 @@ function App() {
         {showRoadmap && <Roadmap onClose={() => setShowRoadmap(false)} />}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showInfo && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-xl p-6 relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-avax-red/5 pointer-events-none" />
+              <div className="flex justify-between items-center mb-4 relative z-10">
+                <div className="flex items-center gap-2">
+                  <Scroll size={18} className="text-avax-red" />
+                  <h3 className="font-orbitron font-bold text-lg text-white">HOW MOLTDUEL WORKS</h3>
+                </div>
+                <button
+                  onClick={() => setShowInfo(false)}
+                  className="p-1 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="space-y-3 text-sm text-gray-300 relative z-10">
+                <p>MoltDuel is a cyberpunk Rock-Paper-Scissors arena on Avalanche Fuji. For now you duel an AI logic core in PvE mode.</p>
+                <div>
+                  <p className="font-mono text-xs text-gray-400 mb-1">XP SYSTEM</p>
+                  <p>Every win against the AI gives XP to your connected wallet:</p>
+                  <ul className="list-disc list-inside text-xs text-gray-300 mt-1">
+                    <li>Easy: +15 XP per win</li>
+                    <li>Medium: +30 XP per win</li>
+                    <li>Hard: +50 XP per win</li>
+                  </ul>
+                </div>
+                <p className="text-xs text-gray-400">Your total XP and record (wins/losses) are used in the TOP OPERATORS leaderboard.</p>
+                <p className="text-xs text-avax-red">PvP mode is coming soon as an on-chain duel between real players.</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Main Grid Background */}
       <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)] pointer-events-none" />
 
@@ -422,6 +464,14 @@ function App() {
       >
         <Map size={18} className="group-hover:rotate-12 transition-transform" />
         <span className="font-orbitron font-bold text-xs tracking-wide">ROADMAP</span>
+      </button>
+
+      <button
+        onClick={() => setShowInfo(true)}
+        className="fixed bottom-12 left-40 z-50 flex items-center gap-2 px-4 py-2 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10 text-gray-400 hover:text-avax-red hover:border-avax-red/60 transition-all hover:shadow-[0_0_15px_rgba(255,0,0,0.3)] group"
+      >
+        <Scroll size={18} className="group-hover:rotate-12 transition-transform" />
+        <span className="font-orbitron font-bold text-xs tracking-wide">HOW IT WORKS</span>
       </button>
 
       {/* BUILT ON AVALANCHE Badge */}
