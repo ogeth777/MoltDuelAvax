@@ -8,26 +8,26 @@ import { Roadmap } from './components/Roadmap';
 import { playSound } from './utils/audio';
 import logo from './assets/logo.jpg';
 import avaxLogo from './assets/avalanche-symbol.png';
-import { Scroll, Scissors, Trophy, Wallet, RefreshCw, Zap, Shield, Swords, Lock, Users, Droplets, Map, X } from 'lucide-react';
+import { Scroll, Scissors, Trophy, RefreshCw, Zap, Shield, Swords, Lock, Users, Map, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type Choice = 'rock' | 'paper' | 'scissors' | null;
 type GameState = 'idle' | 'playing' | 'result';
 type Winner = 'player' | 'ai' | 'draw' | null;
 type Difficulty = 'easy' | 'medium' | 'hard';
-
-const BET_AMOUNT = 100;
+type Mode = 'pve' | 'pvp';
+type PvPStage = 'p1' | 'p2' | 'reveal';
 
 const DIFFICULTY_CONFIG = {
-  easy: { multiplier: 2, label: 'EASY', color: 'text-green-400', border: 'border-green-400/50' },
-  medium: { multiplier: 5, label: 'MEDIUM', color: 'text-yellow-400', border: 'border-yellow-400/50' },
-  hard: { multiplier: 10, label: 'HARD', color: 'text-red-500', border: 'border-red-500/50' },
+  easy: { multiplier: 2, label: 'EASY', color: 'text-green-400', border: 'border-green-400/50', xp: 15 },
+  medium: { multiplier: 5, label: 'MEDIUM', color: 'text-yellow-400', border: 'border-yellow-400/50', xp: 30 },
+  hard: { multiplier: 10, label: 'HARD', color: 'text-red-500', border: 'border-red-500/50', xp: 50 },
 };
 
 const BOT_MESSAGES = {
   start: ["System initialized.", "Waiting for input...", "I can see your cursor shaking."],
   win: ["Lucky guess.", "My algorithms missed that.", "Glitch in the matrix.", "You won... for now."],
-  lose: ["Calculated.", "Too easy.", "Thanks for the $DUEL.", "Predictable human.", "Better luck next block."],
+  lose: ["Calculated.", "Too easy.", "Thanks for the credits.", "Predictable human.", "Better luck next block."],
   draw: ["Copycat.", "Sync error.", "Great minds?", "Stalemate detected."]
 };
 
@@ -47,6 +47,41 @@ function App() {
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [mode, setMode] = useState<Mode>('pve');
+  const [pvpStage, setPvpStage] = useState<PvPStage>('p1');
+  const [p1Choice, setP1Choice] = useState<Choice>(null);
+  const [leaderboardVersion, setLeaderboardVersion] = useState(0);
+
+  const updateStats = (result: Winner) => {
+    if (!isConnected || !address) return;
+    if (mode !== 'pve') return;
+    if (result !== 'player' && result !== 'ai') return;
+    const key = 'moltduel_xp_v1';
+    let stored: Record<string, { xp: number; wins: number; losses: number }> = {};
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        stored = JSON.parse(raw);
+      }
+    } catch {
+      stored = {};
+    }
+    const addr = address.toLowerCase();
+    const current = stored[addr] ?? { xp: 0, wins: 0, losses: 0 };
+    if (result === 'player') {
+      const xpGain = DIFFICULTY_CONFIG[difficulty].xp;
+      current.xp += xpGain;
+      current.wins += 1;
+    } else if (result === 'ai') {
+      current.losses += 1;
+    }
+    stored[addr] = current;
+    try {
+      localStorage.setItem(key, JSON.stringify(stored));
+      setLeaderboardVersion(v => v + 1);
+    } catch {
+    }
+  };
 
   const addMessage = (sender: 'bot' | 'system', text: string) => {
     const newMessage: ChatMessage = {
@@ -72,6 +107,7 @@ function App() {
   }, [isConnected, chainId, switchChain]);
 
   const handleChoice = (choice: Choice) => {
+    if (mode === 'pvp') return;
     if (gameState === 'playing') return;
 
     playSound('click');
@@ -129,6 +165,35 @@ function App() {
     }, 2500);
   };
 
+  const handlePvPChoice = (choice: Choice) => {
+    if (mode !== 'pvp') return;
+    if (gameState === 'result') return;
+    playSound('click');
+    if (pvpStage === 'p1') {
+      setP1Choice(choice);
+      setPvpStage('p2');
+      setMessages(prev => [...prev.slice(-4), { id: Math.random().toString(36).slice(2), sender: 'system', text: 'Hand over to Player 2', timestamp: Date.now() }]);
+    } else if (pvpStage === 'p2') {
+      setPvpStage('reveal');
+      let result: Winner = 'draw';
+      if (p1Choice === choice) {
+        result = 'draw';
+      } else if (
+        (p1Choice === 'rock' && choice === 'scissors') ||
+        (p1Choice === 'paper' && choice === 'rock') ||
+        (p1Choice === 'scissors' && choice === 'paper')
+      ) {
+        result = 'player';
+      } else {
+        result = 'ai';
+      }
+      setPlayerChoice(p1Choice);
+      setAiChoice(choice);
+      setWinner(result);
+      setGameState('result');
+    }
+  };
+
   const determineWinner = (player: Choice, ai: Choice) => {
     let result: Winner = 'draw';
     
@@ -146,6 +211,7 @@ function App() {
 
     setWinner(result);
     setGameState('result');
+    updateStats(result);
 
     if (result === 'player') {
       playSound('win');
@@ -169,6 +235,8 @@ function App() {
     setPlayerChoice(null);
     setAiChoice(null);
     setWinner(null);
+    setPvpStage('p1');
+    setP1Choice(null);
   };
 
   const handleConnectWallet = () => {
@@ -323,7 +391,7 @@ function App() {
             exit={{ x: -300, opacity: 0 }}
             className="fixed left-6 top-32 z-40"
           >
-            <Leaderboard />
+            <Leaderboard refreshKey={leaderboardVersion} currentAddress={address} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -377,12 +445,23 @@ function App() {
           <Swords size={200} />
         </div>
 
-        {/* AI Entity */}
         <div className="w-full max-w-2xl h-[200px] flex items-center justify-center relative mb-24">
           <div className="absolute inset-0 bg-avax-red/5 blur-[100px] rounded-full" />
-          <AIAvatar mood={getMood()} />
-          
-          {/* Status Rings */}
+          {mode === 'pve' ? (
+            <AIAvatar mood={getMood()} />
+          ) : (
+            <div className="flex items-center gap-12">
+              <div className="text-center">
+                <div className="text-xs text-gray-400 mb-2">PLAYER 1</div>
+                <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/5">🧑</div>
+              </div>
+              <div className="text-2xl text-white/20">VS</div>
+              <div className="text-center">
+                <div className="text-xs text-gray-400 mb-2">PLAYER 2</div>
+                <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/5">🧑‍💻</div>
+              </div>
+            </div>
+          )}
           <div className="absolute inset-0 border border-white/5 rounded-full animate-[spin_10s_linear_infinite]" />
           <div className="absolute inset-4 border border-dashed border-white/5 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
         </div>
@@ -390,27 +469,42 @@ function App() {
         {/* Interaction Area */}
         <div className="w-full max-w-4xl px-4 flex flex-col items-center mt-20">
           
-          {/* Difficulty Selector */}
           {gameState === 'idle' && (
-            <div className="flex gap-4 mb-8">
-              {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
+            <div className="flex flex-col items-center gap-4 mb-8">
+              <div className="flex gap-2">
                 <button
-                  key={d}
-                  onClick={() => {
-                    playSound('click');
-                    setDifficulty(d);
-                  }}
-                  className={`px-4 py-1.5 border ${
-                    difficulty === d 
-                      ? `${DIFFICULTY_CONFIG[d].border} bg-white/10 ${DIFFICULTY_CONFIG[d].color} shadow-[0_0_15px_rgba(255,255,255,0.1)]`
-                      : 'border-white/10 text-gray-500 hover:border-white/30'
-                  } font-orbitron font-bold text-xs tracking-widest transition-all`}
+                  onClick={() => { playSound('click'); setMode('pve'); resetGame(); }}
+                  className={`px-4 py-1.5 border font-orbitron text-xs tracking-widest rounded ${mode === 'pve' ? 'border-avax-red/60 text-avax-red bg-white/10' : 'border-white/10 text-gray-500 hover:border-white/30'}`}
                 >
-                  <span className="inline-block">
-                    {DIFFICULTY_CONFIG[d].label} <span className="text-[10px] opacity-70 ml-1">x{DIFFICULTY_CONFIG[d].multiplier}</span>
-                  </span>
+                  PvE
                 </button>
-              ))}
+                <button
+                  onClick={() => { playSound('click'); setMode('pvp'); resetGame(); }}
+                  className={`px-4 py-1.5 border font-orbitron text-xs tracking-widest rounded ${mode === 'pvp' ? 'border-avax-red/60 text-avax-red bg-white/10' : 'border-white/10 text-gray-500 hover:border-white/30'}`}
+                >
+                  PvP
+                </button>
+              </div>
+              {mode === 'pve' && (
+                <div className="flex gap-4">
+                  {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => { playSound('click'); setDifficulty(d); }}
+                      className={`px-4 py-1.5 border ${difficulty === d ? `${DIFFICULTY_CONFIG[d].border} bg-white/10 ${DIFFICULTY_CONFIG[d].color} shadow-[0_0_15px_rgba(255,255,255,0.1)]` : 'border-white/10 text-gray-500 hover:border-white/30'} font-orbitron font-bold text-xs tracking-widest transition-all`}
+                    >
+                      <span className="inline-block">
+                        {DIFFICULTY_CONFIG[d].label} <span className="text-[10px] opacity-70 ml-1">x{DIFFICULTY_CONFIG[d].multiplier}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {mode === 'pvp' && (
+                <div className="text-xs text-gray-400 font-mono tracking-widest">
+                  {pvpStage === 'p1' ? 'Player 1: choose' : 'Player 2: choose'}
+                </div>
+              )}
             </div>
           )}
           
@@ -432,7 +526,7 @@ function App() {
 
                 <div className="flex justify-center items-center gap-8 mb-6">
                    <div className="flex flex-col items-center">
-                      <span className="text-xs text-gray-500 mb-2">YOU</span>
+                      <span className="text-xs text-gray-500 mb-2">{mode === 'pve' ? 'YOU' : 'PLAYER 1'}</span>
                       <div className="text-4xl p-4 bg-white/5 rounded-full border border-white/10">
                         {playerChoice === 'rock' && '💎'}
                         {playerChoice === 'paper' && <Scroll size={32} className="text-avax-accent" />}
@@ -441,7 +535,7 @@ function App() {
                    </div>
                    <div className="text-2xl font-bold text-white/20">VS</div>
                    <div className="flex flex-col items-center">
-                      <span className="text-xs text-gray-500 mb-2">AI</span>
+                      <span className="text-xs text-gray-500 mb-2">{mode === 'pve' ? 'AI' : 'PLAYER 2'}</span>
                       <div className="text-4xl p-4 bg-white/5 rounded-full border border-white/10">
                         {aiChoice === 'rock' && '💎'}
                         {aiChoice === 'paper' && <Scroll size={32} className="text-avax-accent" />}
@@ -487,24 +581,24 @@ function App() {
                   icon={<div className="text-2xl md:text-4xl mb-2">💎</div>}
                   title="ROCK"
                   subtitle="CRUSHES SCISSORS"
-                  onClick={() => handleChoice('rock')}
-                  disabled={gameState === 'playing'}
+                  onClick={() => mode === 'pvp' ? handlePvPChoice('rock') : handleChoice('rock')}
+                  disabled={mode === 'pve' ? gameState === 'playing' : false}
                   delay={0}
                 />
                 <CyberCard 
                   icon={<Scroll size={32} className="text-avax-accent mb-2" />}
                   title="PAPER"
                   subtitle="COVERS ROCK"
-                  onClick={() => handleChoice('paper')}
-                  disabled={gameState === 'playing'}
+                  onClick={() => mode === 'pvp' ? handlePvPChoice('paper') : handleChoice('paper')}
+                  disabled={mode === 'pve' ? gameState === 'playing' : false}
                   delay={0.1}
                 />
                 <CyberCard 
                   icon={<Scissors size={32} className="text-avax-glow mb-2" />}
                   title="SCISSORS"
                   subtitle="CUTS PAPER"
-                  onClick={() => handleChoice('scissors')}
-                  disabled={gameState === 'playing'}
+                  onClick={() => mode === 'pvp' ? handlePvPChoice('scissors') : handleChoice('scissors')}
+                  disabled={mode === 'pve' ? gameState === 'playing' : false}
                   delay={0.2}
                 />
               </motion.div>
@@ -515,7 +609,7 @@ function App() {
             <div className="mt-12 flex items-center gap-4 opacity-50">
               <div className="h-px w-20 bg-gradient-to-r from-transparent to-white/50" />
               <p className="font-orbitron text-sm tracking-[0.2em] text-avax-accent animate-pulse">
-                INITIATE PROTOCOL // READY FOR BATTLE
+                {mode === 'pve' ? 'INITIATE PROTOCOL // READY FOR BATTLE' : (pvpStage === 'p1' ? 'PLAYER 1 READY' : 'PLAYER 2 READY')}
               </p>
               <div className="h-px w-20 bg-gradient-to-l from-transparent to-white/50" />
             </div>
