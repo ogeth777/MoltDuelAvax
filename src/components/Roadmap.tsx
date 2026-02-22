@@ -64,6 +64,7 @@ export function Roadmap({ onClose }: { onClose: () => void }) {
                   <li className="flex items-center gap-2">○ Deployment on AVALANCHE Mainnet</li>
                   <li className="flex items-center gap-2">○ Smart Contract Audits</li>
                   <li className="flex items-center gap-2">○ Real Asset Betting Integration</li>
+                  <li className="flex items-center gap-2">○ Seasonal ladders with on-chain rewards</li>
                 </ul>
               </div>
             </div>
