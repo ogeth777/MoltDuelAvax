@@ -580,6 +580,12 @@ function App() {
                   {winner === 'player' ? 'VICTORY' : winner === 'ai' ? 'DEFEAT' : 'DRAW'}
                 </h2>
 
+                {winner === 'player' && mode === 'pve' && (
+                  <div className="mb-4 font-mono text-sm text-avax-accent">
+                    +{DIFFICULTY_CONFIG[difficulty].xp} XP gained
+                  </div>
+                )}
+
                 {winner === 'ai' && mode === 'pve' && (
                   <div className="mb-4 font-mono text-sm text-red-500">
                     -3 XP penalty applied
