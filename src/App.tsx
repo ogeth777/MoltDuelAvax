@@ -57,7 +57,7 @@ function App() {
     if (!isConnected || !address) return;
     if (mode !== 'pve') return;
     if (result !== 'player' && result !== 'ai') return;
-    const key = 'moltduel_xp_v1';
+    const key = 'moltduel_xp_v2';
     let stored: Record<string, { xp: number; wins: number; losses: number }> = {};
     try {
       const raw = localStorage.getItem(key);

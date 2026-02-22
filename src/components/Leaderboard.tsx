@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trophy, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -16,15 +16,36 @@ interface LeaderboardProps {
   currentAddress?: string;
 }
 
-const DEMO_ENTRIES: LeaderboardEntry[] = [
-  { rank: 1, address: '0xF1A90bA8b0eD0fC4E2cA9bB0C0DEFaCe00000001', xp: 420, wins: 21, losses: 7 },
-  { rank: 2, address: '0x9EEDBEEF4F4cAfeC0deC0deC0DeC0DE000000002', xp: 315, wins: 15, losses: 6 },
-  { rank: 3, address: '0xC0FFEE0000000000000000000000000000000003', xp: 260, wins: 13, losses: 8 },
-  { rank: 4, address: '0xDEAD000000000000000000000000000000000004', xp: 180, wins: 9, losses: 10 },
-];
+const STORAGE_KEY = 'moltduel_xp_v2';
 
-export const Leaderboard: React.FC<LeaderboardProps> = () => {
-  const entries = DEMO_ENTRIES;
+export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAddress }) => {
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        setEntries([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as Record<string, { xp: number; wins: number; losses: number }>;
+      const list: LeaderboardEntry[] = Object.entries(parsed).map(([addr, stats]) => ({
+        rank: 0,
+        address: addr,
+        xp: stats.xp,
+        wins: stats.wins,
+        losses: stats.losses,
+        isUser: currentAddress ? addr.toLowerCase() === currentAddress.toLowerCase() : false,
+      }));
+      list.sort((a, b) => b.xp - a.xp);
+      list.forEach((entry, index) => {
+        entry.rank = index + 1;
+      });
+      setEntries(list);
+    } catch {
+      setEntries([]);
+    }
+  }, [refreshKey, currentAddress]);
 
   return (
     <div className="bg-black/40 backdrop-blur-md border border-avax-red/30 rounded-lg p-4 w-full max-w-sm h-fit">
