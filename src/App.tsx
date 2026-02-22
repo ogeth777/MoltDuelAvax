@@ -10,6 +10,7 @@ import logo from './assets/logo.jpg';
 import avaxLogo from './assets/avalanche-symbol.png';
 import { Scroll, Scissors, Trophy, RefreshCw, Zap, Shield, Swords, Lock, Users, Map, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { upsertLeaderboard } from './services/leaderboard';
 
 type Choice = 'rock' | 'paper' | 'scissors' | null;
 type GameState = 'idle' | 'playing' | 'result';
@@ -80,6 +81,8 @@ function App() {
     stored[addr] = current;
     try {
       localStorage.setItem(key, JSON.stringify(stored));
+      // Cloud sync (if Supabase configured)
+      upsertLeaderboard(addr, current);
       setLeaderboardVersion(v => v + 1);
     } catch {
     }
@@ -119,6 +122,8 @@ function App() {
       if (!stored[addr]) {
         stored[addr] = { xp: 0, wins: 0, losses: 0 };
         localStorage.setItem(key, JSON.stringify(stored));
+        // Cloud ensure entry exists
+        upsertLeaderboard(addr, stored[addr]);
         setLeaderboardVersion(v => v + 1);
       }
     } catch {

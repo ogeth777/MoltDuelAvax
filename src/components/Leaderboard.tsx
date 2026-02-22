@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { fetchLeaderboard } from '../services/leaderboard';
 
 interface LeaderboardEntry {
   rank: number;
@@ -22,29 +23,44 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAdd
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        setEntries([]);
+    (async () => {
+      const cloud = await fetchLeaderboard(100);
+      if (cloud && cloud.length > 0) {
+        const mapped: LeaderboardEntry[] = cloud.map((r, idx) => ({
+          rank: idx + 1,
+          address: r.address,
+          xp: r.xp,
+          wins: r.wins,
+          losses: r.losses,
+          isUser: currentAddress ? r.address.toLowerCase() === currentAddress.toLowerCase() : false,
+        }));
+        setEntries(mapped);
         return;
       }
-      const parsed = JSON.parse(raw) as Record<string, { xp: number; wins: number; losses: number }>;
-      const list: LeaderboardEntry[] = Object.entries(parsed).map(([addr, stats]) => ({
-        rank: 0,
-        address: addr,
-        xp: stats.xp,
-        wins: stats.wins,
-        losses: stats.losses,
-        isUser: currentAddress ? addr.toLowerCase() === currentAddress.toLowerCase() : false,
-      }));
-      list.sort((a, b) => b.xp - a.xp);
-      list.forEach((entry, index) => {
-        entry.rank = index + 1;
-      });
-      setEntries(list);
-    } catch {
-      setEntries([]);
-    }
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          setEntries([]);
+          return;
+        }
+        const parsed = JSON.parse(raw) as Record<string, { xp: number; wins: number; losses: number }>;
+        const list: LeaderboardEntry[] = Object.entries(parsed).map(([addr, stats]) => ({
+          rank: 0,
+          address: addr,
+          xp: stats.xp,
+          wins: stats.wins,
+          losses: stats.losses,
+          isUser: currentAddress ? addr.toLowerCase() === currentAddress.toLowerCase() : false,
+        }));
+        list.sort((a, b) => b.xp - a.xp);
+        list.forEach((entry, index) => {
+          entry.rank = index + 1;
+        });
+        setEntries(list);
+      } catch {
+        setEntries([]);
+      }
+    })();
   }, [refreshKey, currentAddress]);
 
   return (
