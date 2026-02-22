@@ -75,6 +75,7 @@ function App() {
       current.wins += 1;
     } else if (result === 'ai') {
       current.losses += 1;
+      current.xp = Math.max(0, current.xp - 3);
     }
     stored[addr] = current;
     try {
@@ -428,11 +429,12 @@ function App() {
                 <p>MoltDuel is a cyberpunk Rock-Paper-Scissors arena on Avalanche Fuji. For now you duel an AI logic core in PvE mode.</p>
                 <div>
                   <p className="font-mono text-xs text-gray-400 mb-1">XP SYSTEM</p>
-                  <p>Every win against the AI gives XP to your connected wallet:</p>
+                  <p>Every duel against the AI updates XP on your connected wallet:</p>
                   <ul className="list-disc list-inside text-xs text-gray-300 mt-1">
                     <li>Easy: +15 XP per win</li>
                     <li>Medium: +30 XP per win</li>
                     <li>Hard: +50 XP per win</li>
+                    <li>Loss vs AI: -3 XP (never below 0)</li>
                   </ul>
                 </div>
                 <p className="text-xs text-gray-400">Your total XP and record (wins/losses) are used in the TOP OPERATORS leaderboard.</p>
