@@ -241,9 +241,13 @@ function App() {
     setP1Choice(null);
   };
 
-  const handleConnectWallet = () => {
+  const handleConnectWallet = async () => {
     playSound('click');
-    connect({ connector: injected(), chainId: 43113 });
+    try {
+      await connect({ connector: injected() });
+      await switchChain({ chainId: 43113 });
+    } catch {
+    }
     setShowWalletModal(false);
   };
 
