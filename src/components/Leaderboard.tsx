@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, Crown } from 'lucide-react';
+import { Trophy, Crown, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { fetchLeaderboard } from '../services/leaderboard';
 
@@ -21,9 +21,12 @@ const STORAGE_KEY = 'moltduel_xp_v2';
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAddress }) => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [manualRefresh, setManualRefresh] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       const cloud = await fetchLeaderboard(100);
       if (cloud && cloud.length > 0) {
         const filteredCloud = cloud.filter((r) => r.xp > 0 || r.wins > 0 || r.losses > 0);
@@ -40,6 +43,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAdd
           isUser: currentAddress ? r.address.toLowerCase() === currentAddress.toLowerCase() : false,
         }));
         setEntries(mapped);
+        setLoading(false);
         return;
       }
       try {
@@ -60,6 +64,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAdd
         const filtered = list.filter((e) => e.xp > 0 || e.wins > 0 || e.losses > 0);
         if (filtered.length === 0) {
           setEntries([]);
+          setLoading(false);
           return;
         }
         filtered.sort((a, b) => b.xp - a.xp);
@@ -67,17 +72,29 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAdd
           entry.rank = index + 1;
         });
         setEntries(filtered);
+        setLoading(false);
       } catch {
         setEntries([]);
+        setLoading(false);
       }
     })();
-  }, [refreshKey, currentAddress]);
+  }, [refreshKey, currentAddress, manualRefresh]);
 
   return (
     <div className="bg-black/40 backdrop-blur-md border border-avax-red/30 rounded-lg p-4 w-full max-w-sm h-fit">
-      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-avax-red/20">
-        <Trophy className="text-avax-red" size={20} />
-        <h3 className="text-avax-red font-bold tracking-widest text-sm">TOP OPERATORS // XP</h3>
+      <div className="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-avax-red/20">
+        <div className="flex items-center gap-2">
+          <Trophy className="text-avax-red" size={20} />
+          <h3 className="text-avax-red font-bold tracking-widest text-sm">TOP OPERATORS // XP</h3>
+        </div>
+        <button
+          onClick={() => setManualRefresh(v => v + 1)}
+          disabled={loading}
+          className="flex items-center gap-1 px-2 py-1 rounded border border-avax-red/40 text-[10px] text-avax-red hover:bg-avax-red/10 disabled:opacity-40 disabled:cursor-default transition-all"
+        >
+          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+          <span>REFRESH</span>
+        </button>
       </div>
 
       <div className="space-y-2">
