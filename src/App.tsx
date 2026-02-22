@@ -101,7 +101,6 @@ function App() {
   useEffect(() => {
     playSound('start');
     addMessage('system', 'Connection established to MoltDuel Local Node');
-    setTimeout(() => addMessage('bot', "Ready to lose some credits, human?"), 1000);
   }, []);
 
   // Force Avalanche Fuji Testnet
