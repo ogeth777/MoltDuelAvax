@@ -58,11 +58,28 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAdd
     }
   }, [refreshKey, currentAddress]);
 
+  const handleReset = () => {
+    try {
+      localStorage.removeItem('moltduel_xp_v1');
+    } catch {
+    }
+    const resetEntries = DEMO_ENTRIES.map((entry, index) => ({ ...entry, rank: index + 1 }));
+    setEntries(resetEntries);
+  };
+
   return (
     <div className="bg-black/40 backdrop-blur-md border border-avax-red/30 rounded-lg p-4 w-full max-w-sm h-fit">
-      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-avax-red/20">
-        <Trophy className="text-avax-red" size={20} />
-        <h3 className="text-avax-red font-bold tracking-widest text-sm">TOP OPERATORS // XP</h3>
+      <div className="flex items-center justify-between mb-4 pb-2 border-b border-avax-red/20">
+        <div className="flex items-center gap-2">
+          <Trophy className="text-avax-red" size={20} />
+          <h3 className="text-avax-red font-bold tracking-widest text-sm">TOP OPERATORS // XP</h3>
+        </div>
+        <button
+          onClick={handleReset}
+          className="text-[10px] font-mono text-gray-500 hover:text-avax-red transition-colors"
+        >
+          RESET
+        </button>
       </div>
 
       <div className="space-y-2">
