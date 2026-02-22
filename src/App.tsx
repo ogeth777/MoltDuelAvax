@@ -108,6 +108,22 @@ function App() {
     }
   }, [isConnected, chainId, switchChain]);
 
+  // Ensure connected wallet appears in leaderboard with zero stats
+  useEffect(() => {
+    if (!isConnected || !address) return;
+    try {
+      const key = 'moltduel_xp_v2';
+      const raw = localStorage.getItem(key);
+      const stored: Record<string, { xp: number; wins: number; losses: number }> = raw ? JSON.parse(raw) : {};
+      const addr = address.toLowerCase();
+      if (!stored[addr]) {
+        stored[addr] = { xp: 0, wins: 0, losses: 0 };
+        localStorage.setItem(key, JSON.stringify(stored));
+        setLeaderboardVersion(v => v + 1);
+      }
+    } catch {
+    }
+  }, [isConnected, address]);
   const handleChoice = (choice: Choice) => {
     if (mode === 'pvp') return;
     if (gameState === 'playing') return;
