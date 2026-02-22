@@ -121,8 +121,6 @@ function App() {
       if (!stored[addr]) {
         stored[addr] = { xp: 0, wins: 0, losses: 0 };
         localStorage.setItem(key, JSON.stringify(stored));
-        // Cloud ensure entry exists
-        upsertLeaderboard(addr, stored[addr]);
         setLeaderboardVersion(v => v + 1);
       }
     } catch {

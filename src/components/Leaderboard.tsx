@@ -26,7 +26,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAdd
     (async () => {
       const cloud = await fetchLeaderboard(100);
       if (cloud && cloud.length > 0) {
-        const mapped: LeaderboardEntry[] = cloud.map((r, idx) => ({
+        const filteredCloud = cloud.filter((r) => r.xp > 0 || r.wins > 0 || r.losses > 0);
+        if (filteredCloud.length === 0) {
+          setEntries([]);
+          return;
+        }
+        const mapped: LeaderboardEntry[] = filteredCloud.map((r, idx) => ({
           rank: idx + 1,
           address: r.address,
           xp: r.xp,
@@ -52,11 +57,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ refreshKey, currentAdd
           losses: stats.losses,
           isUser: currentAddress ? addr.toLowerCase() === currentAddress.toLowerCase() : false,
         }));
-        list.sort((a, b) => b.xp - a.xp);
-        list.forEach((entry, index) => {
+        const filtered = list.filter((e) => e.xp > 0 || e.wins > 0 || e.losses > 0);
+        if (filtered.length === 0) {
+          setEntries([]);
+          return;
+        }
+        filtered.sort((a, b) => b.xp - a.xp);
+        filtered.forEach((entry, index) => {
           entry.rank = index + 1;
         });
-        setEntries(list);
+        setEntries(filtered);
       } catch {
         setEntries([]);
       }

@@ -40,15 +40,15 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[] | 
       .order('xp', { ascending: false })
       .limit(limit);
     if (error) return null;
-    return (data ?? []).map((d) => ({
+    const rows = (data ?? []).map((d) => ({
       address: d.address.toLowerCase(),
       xp: d.xp ?? 0,
       wins: d.wins ?? 0,
       losses: d.losses ?? 0,
       updated_at: d.updated_at,
     }));
+    return rows.filter((r) => r.xp > 0 || r.wins > 0 || r.losses > 0);
   } catch {
     return null;
   }
 }
-
