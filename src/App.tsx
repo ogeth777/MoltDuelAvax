@@ -572,13 +572,19 @@ function App() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="text-center w-full glass-panel p-8 border-t-4 border-b-4 border-avax-red"
               >
-                <h2 className={`font-orbitron text-5xl md:text-7xl font-black italic tracking-tighter mb-4 ${
+                <h2 className={`font-orbitron text-5xl md:text-7xl font-black italic tracking-tighter mb-2 ${
                   winner === 'player' ? 'text-avax-accent drop-shadow-[0_0_30px_rgba(32,227,178,0.5)]' :
                   winner === 'ai' ? 'text-red-500 drop-shadow-[0_0_30px_rgba(239,68,68,0.5)]' :
                   'text-gray-400'
                 }`}>
                   {winner === 'player' ? 'VICTORY' : winner === 'ai' ? 'DEFEAT' : 'DRAW'}
                 </h2>
+
+                {winner === 'ai' && mode === 'pve' && (
+                  <div className="mb-4 font-mono text-sm text-red-500">
+                    -3 XP penalty applied
+                  </div>
+                )}
 
                 <div className="flex justify-center items-center gap-8 mb-6">
                    <div className="flex flex-col items-center">
